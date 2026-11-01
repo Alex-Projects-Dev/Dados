@@ -243,6 +243,9 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
       <li><b>Escalera corta:</b> 4 números seguidos (1-2-3-4, 2-3-4-5 o 3-4-5-6) = 30 puntos.</li>
       <li><b>Escalera larga:</b> 5 números seguidos (1-2-3-4-5 o 2-3-4-5-6) = 40 puntos.</li>
       <li><b>Full:</b> 3 dados iguales y otros 2 iguales (por ejemplo 4-4-4-2-2) = 25 puntos.</li>
+      <li><b>Trío:</b> al menos 3 dados iguales = suma de los 5 dados.</li>
+      <li><b>Póker:</b> al menos 4 dados iguales = suma de los 5 dados.</li>
+      <li><b>Cinco iguales:</b> los 5 dados iguales = 50 puntos.</li>
       <li><b>Libre:</b> suma de los 5 dados, sirve con cualquier tirada.</li>
       <li>Cada casilla se usa una vez. Si nada te sirve, anota 0 donde menos pierdas.</li>
     </ul>
@@ -296,6 +299,9 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
     { id: "sc", name: "Escalera corta", rule: "4 seguidos · 30" },
     { id: "sl", name: "Escalera larga", rule: "5 seguidos · 40" },
     { id: "fu", name: "Full", rule: "3 + 2 iguales · 25" },
+    { id: "tr", name: "Trío", rule: "3 iguales · suma" },
+    { id: "po", name: "Póker", rule: "4 iguales · suma" },
+    { id: "ci", name: "Cinco iguales", rule: "5 iguales · 50" },
     { id: "li", name: "Libre", rule: "suma de todos" }
   ];
   const MAX_ROLLS = 3, MAX_PLAYERS = 5;
@@ -318,6 +324,11 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
       const counts = Object.values(dice.reduce((m, d) => (m[d] = (m[d] || 0) + 1, m), {})).sort();
       return counts.length === 2 && counts[0] === 2 && counts[1] === 3 ? 25 : 0;
     }
+    const most = Math.max(...Object.values(dice.reduce((m, d) => (m[d] = (m[d] || 0) + 1, m), {})));
+    const sum = dice.reduce((a, b) => a + b, 0);
+    if (cat.id === "tr") return most >= 3 ? sum : 0;
+    if (cat.id === "po") return most >= 4 ? sum : 0;
+    if (cat.id === "ci") return most === 5 ? 50 : 0;
     if (cat.id === "li") return dice.reduce((a, b) => a + b, 0);
     return 0;
   }
@@ -398,7 +409,7 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
 
   // Recomendación: la casilla donde la tirada rinde más por encima de lo que esa casilla suele dar.
   // Así "Libre" no gana siempre por sumar mucho, y si nada sirve marca donde menos se pierde.
-  const TYPICAL = { n1: 2.1, n2: 4.2, n3: 6.3, n4: 8.4, n5: 10.5, n6: 12.6, sc: 18, sl: 12, fu: 9, li: 22 };
+  const TYPICAL = { n1: 2.1, n2: 4.2, n3: 6.3, n4: 8.4, n5: 10.5, n6: 12.6, sc: 18, sl: 12, fu: 9, tr: 12, po: 5, ci: 8, li: 22 };
   function bestOption(p) {
     let best = null, bestGain = -Infinity, bestVal = 0;
     CATS.forEach(c => {
