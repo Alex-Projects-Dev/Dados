@@ -168,6 +168,57 @@ tr.total td:first-child { font-family: var(--font-display); }
 .final li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; border-radius: 10px; background: rgba(255,255,255,.08); font-size: 17px; }
 .final li:first-child { background: var(--held); color: #2a2208; font-weight: 700; }
 .final li .pts { font-family: var(--font-num); font-weight: 700; }
+
+/* Marcador */
+.board { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.board::-webkit-scrollbar { display: none; }
+.chip { flex: 0 0 auto; display: flex; gap: 6px; align-items: baseline; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); font-size: 13px; }
+.chip b { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.chip.on { background: #f3efe2; color: var(--felt-deep); }
+
+/* Táctil */
+html { -webkit-text-size-adjust: 100%; }
+button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.die:active:not(:disabled), .opt:active:not(:disabled), .btn:active:not(:disabled) { transform: scale(.96); }
+
+/* Móvil */
+@media (max-width: 600px) {
+  body { font-size: 14px; }
+  .wrap { padding-block: 12px 28px; gap: 12px; }
+  h1 { font-size: 28px; }
+  body.playing .sub { display: none; }
+  .setup { padding: 16px; }
+  .names { grid-template-columns: minmax(0, 1fr); }
+  .names input { font-size: 16px; padding: 12px; }
+  .count button { width: 52px; height: 52px; }
+  .setup .btn { justify-self: stretch; }
+  .table { padding: 14px; border-radius: 14px; gap: 12px; box-shadow: inset 0 0 0 4px var(--felt-line); }
+  .turn .who { font-size: 21px; }
+  .dice { gap: 8px; }
+  .die { padding: 14%; border-radius: 16%; }
+  .die.held { transform: translateY(-4px); box-shadow: 0 0 0 3px var(--held), 0 8px 16px rgba(0,0,0,.35); }
+  .die.held::after { content: "FIJO"; font-size: 9px; bottom: -18px; }
+  .controls { margin-top: 22px; gap: 10px; }
+  #roll { flex: 1 1 100%; min-height: 54px; font-size: 20px; }
+  .rolls { width: 100%; justify-content: center; }
+  .hint { font-size: 13px; text-align: center; }
+  .options { padding: 10px; }
+  .opt-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .opt { min-height: 50px; padding: 8px 10px; font-size: 14px; flex-wrap: wrap; row-gap: 2px; }
+  .opt.best::before { font-size: 9px; }
+  .final .controls .btn { flex: 1 1 100%; }
+  .sheet { padding: 12px; border-radius: 12px; }
+  .sheet h2 { font-size: 19px; }
+  th, td { padding: 9px 3px; }
+  thead th { font-size: 12px; max-width: 58px; overflow: hidden; text-overflow: ellipsis; }
+  tbody td { font-size: 14px; }
+  tbody td:first-child { font-size: 13px; white-space: normal; }
+  td .rule { display: none; }
+  table { table-layout: fixed; }
+  thead th:first-child { width: 27%; max-width: none; }
+  td.preview { border-radius: 6px; }
+  tr.total td { font-size: 16px; }
+}
 </style>
 </head>
 <body>
@@ -202,6 +253,7 @@ tr.total td:first-child { font-family: var(--font-display); }
         <div class="who" id="who"></div>
         <div class="meta" id="round"></div>
       </div>
+      <div class="board" id="board" aria-label="Marcador"></div>
       <div>
         <div class="dice" id="dice"></div>
         <div class="controls">
@@ -297,20 +349,23 @@ tr.total td:first-child { font-family: var(--font-display); }
   function startGame(names) {
     state = newState(names);
     $("setup").hidden = true; $("game").hidden = false;
+    document.body.classList.add("playing");
     render();
+    window.scrollTo(0, 0);
   }
   $("start").onclick = () => {
     const names = setupNames.slice(0, setupCount).map((n, i) => (n || "").trim() || "Jugador " + (i + 1));
     startGame(names);
   };
   $("again").onclick = () => startGame(state.players.map(p => p.name));
-  $("newgame").onclick = () => { state = null; $("game").hidden = true; $("setup").hidden = false; renderSetup(); };
+  $("newgame").onclick = () => { state = null; document.body.classList.remove("playing"); $("game").hidden = true; $("setup").hidden = false; renderSetup(); };
 
   /* ---------- Juego ---------- */
   function rollDice() {
     if (!state || state.over || state.rollsLeft <= 0) return;
     state.dice = state.dice.map((d, i) => state.held[i] && d ? d : 1 + Math.floor(Math.random() * 6));
     state.rollsLeft--;
+    try { navigator.vibrate && navigator.vibrate(30); } catch (e) {}
     render(true);
   }
   function toggleHold(i) {
@@ -366,6 +421,15 @@ tr.total td:first-child { font-family: var(--font-display); }
 
     $("who").textContent = state.over ? "Fin de la partida" : "Turno de " + p.name;
     $("round").textContent = state.over ? CATS.length + " rondas jugadas" : `Ronda ${state.round} de ${CATS.length}`;
+
+    const board = $("board"); board.innerHTML = "";
+    state.players.forEach((pl, i) => {
+      const c = document.createElement("span");
+      c.className = "chip" + (i === state.current && !state.over ? " on" : "");
+      const n = document.createElement("span"); n.textContent = pl.name;
+      const t = document.createElement("b"); t.textContent = total(pl);
+      c.append(n, t); board.appendChild(c);
+    });
 
     const dice = $("dice"); dice.innerHTML = "";
     state.dice.forEach((d, i) => dice.appendChild(dieEl(d, i, state.held[i], rolling)));
@@ -423,7 +487,7 @@ tr.total td:first-child { font-family: var(--font-display); }
     const thead = t.createTHead(); const hr = thead.insertRow();
     const h0 = document.createElement("th"); h0.textContent = "Casilla"; hr.appendChild(h0);
     state.players.forEach((pl, i) => {
-      const th = document.createElement("th"); th.textContent = pl.name;
+      const th = document.createElement("th"); th.textContent = pl.name; th.title = pl.name;
       if (i === state.current && !state.over) th.className = "current";
       hr.appendChild(th);
     });
@@ -454,7 +518,7 @@ tr.total td:first-child { font-family: var(--font-display); }
 
   function boot(data) {
     renderSetup();
-    if (data && data.state) { state = data.state; $("setup").hidden = true; $("game").hidden = false; render(); }
+    if (data && data.state) { state = data.state; document.body.classList.add("playing"); $("setup").hidden = true; $("game").hidden = false; render(); }
   }
   window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
 })();
