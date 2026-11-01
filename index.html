@@ -242,6 +242,8 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
       <li><b>Unos a Seises:</b> suma de los dados con ese número.</li>
       <li><b>Escalera corta:</b> 4 números seguidos (1-2-3-4, 2-3-4-5 o 3-4-5-6) = 30 puntos.</li>
       <li><b>Escalera larga:</b> 5 números seguidos (1-2-3-4-5 o 2-3-4-5-6) = 40 puntos.</li>
+      <li><b>Full:</b> 3 dados iguales y otros 2 iguales (por ejemplo 4-4-4-2-2) = 25 puntos.</li>
+      <li><b>Libre:</b> suma de los 5 dados, sirve con cualquier tirada.</li>
       <li>Cada casilla se usa una vez. Si nada te sirve, anota 0 donde menos pierdas.</li>
     </ul>
     <button class="btn" id="start" type="button">Empezar</button>
@@ -292,7 +294,9 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
     { id: "n5", name: "Cincos", rule: "suma de 5", face: 5 },
     { id: "n6", name: "Seises", rule: "suma de 6", face: 6 },
     { id: "sc", name: "Escalera corta", rule: "4 seguidos · 30" },
-    { id: "sl", name: "Escalera larga", rule: "5 seguidos · 40" }
+    { id: "sl", name: "Escalera larga", rule: "5 seguidos · 40" },
+    { id: "fu", name: "Full", rule: "3 + 2 iguales · 25" },
+    { id: "li", name: "Libre", rule: "suma de todos" }
   ];
   const MAX_ROLLS = 3, MAX_PLAYERS = 5;
   const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
@@ -310,6 +314,11 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
     if (cat.face) return dice.filter(d => d === cat.face).reduce((a, b) => a + b, 0);
     if (cat.id === "sc") return hasRun(dice, 4) ? 30 : 0;
     if (cat.id === "sl") return hasRun(dice, 5) ? 40 : 0;
+    if (cat.id === "fu") {
+      const counts = Object.values(dice.reduce((m, d) => (m[d] = (m[d] || 0) + 1, m), {})).sort();
+      return counts.length === 2 && counts[0] === 2 && counts[1] === 3 ? 25 : 0;
+    }
+    if (cat.id === "li") return dice.reduce((a, b) => a + b, 0);
     return 0;
   }
 
@@ -387,12 +396,15 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
   }
   const total = p => Object.values(p.scores).reduce((a, b) => a + b, 0);
 
+  // Recomendación: la casilla donde la tirada rinde más por encima de lo que esa casilla suele dar.
+  // Así "Libre" no gana siempre por sumar mucho, y si nada sirve marca donde menos se pierde.
+  const TYPICAL = { n1: 2.1, n2: 4.2, n3: 6.3, n4: 8.4, n5: 10.5, n6: 12.6, sc: 18, sl: 12, fu: 9, li: 22 };
   function bestOption(p) {
-    let best = null, bestVal = -1;
+    let best = null, bestGain = -Infinity, bestVal = 0;
     CATS.forEach(c => {
       if (p.scores[c.id] !== undefined) return;
-      const v = score(c, state.dice);
-      if (v > bestVal) { bestVal = v; best = c.id; }
+      const v = score(c, state.dice), gain = v - TYPICAL[c.id];
+      if (gain > bestGain) { bestGain = gain; best = c.id; bestVal = v; }
     });
     return { id: best, value: bestVal };
   }
@@ -455,7 +467,7 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
       const v = rolled ? score(c, state.dice) : null;
       const b = document.createElement("button");
       b.type = "button"; b.id = "opt-" + c.id;
-      b.className = "opt" + (v === 0 ? " zero" : "") + (!used && c.id === best.id && best.value > 0 ? " best" : "");
+      b.className = "opt" + (v === 0 ? " zero" : "") + (!used && c.id === best.id ? " best" : "");
       b.disabled = used || !rolled;
       const name = document.createElement("span"); name.textContent = c.name;
       const pts = document.createElement("span"); pts.className = "pts";
