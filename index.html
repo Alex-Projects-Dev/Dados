@@ -219,12 +219,120 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
   td.preview { border-radius: 6px; }
   tr.total td { font-size: 16px; }
 }
+
+/* ================= Estética y animaciones ================= */
+:root { --wood-1: #8a5a34; --wood-2: #4a2a16; --gold: #f2c14e; --glow: rgba(242,193,78,.55); }
+body {
+  background:
+    radial-gradient(1200px 500px at 15% -10%, color-mix(in srgb, var(--felt) 18%, transparent), transparent 70%),
+    radial-gradient(900px 500px at 110% 10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+}
+h1 { display: flex; align-items: center; gap: 12px; }
+.logo { display: inline-flex; gap: 6px; }
+.die.mini { width: clamp(30px, 5vw, 40px); padding: 15%; border-radius: 22%; cursor: default; animation: wobble 4s ease-in-out infinite; }
+.die.mini:nth-child(2) { animation-delay: -2s; }
+@keyframes wobble { 0%,100% { transform: rotate(-8deg) translateY(0); } 50% { transform: rotate(10deg) translateY(-4px); } }
+
+.setup { animation: rise .5s cubic-bezier(.2,.8,.2,1) both; box-shadow: 0 1px 0 var(--rule), 0 18px 40px rgba(0,0,0,.08); }
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.count button { transition: transform .15s, background .2s, border-color .2s; }
+.count button:hover { transform: translateY(-2px); border-color: var(--accent); }
+
+/* Mesa: tapete con textura y borde de madera */
+.table {
+  position: relative; overflow: hidden;
+  border: 10px solid transparent; border-radius: 22px;
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>") padding-box,
+    radial-gradient(ellipse at 50% 30%, var(--felt) 0%, var(--felt-deep) 85%) padding-box,
+    linear-gradient(135deg, var(--wood-1), var(--wood-2) 35%, var(--wood-1) 55%, var(--wood-2) 80%, var(--wood-1)) border-box;
+  box-shadow: 0 20px 50px rgba(0,0,0,.28), 0 0 0 1px rgba(0,0,0,.2);
+}
+.table::before { content: ""; position: absolute; inset: 0; border-radius: 12px; box-shadow: inset 0 0 60px rgba(0,0,0,.35); pointer-events: none; }
+.turn .who.enter { animation: slidein .45s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes slidein { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+.chip { transition: background .3s, color .3s, transform .3s; }
+.chip.on { transform: scale(1.05); }
+.chip.bump b { animation: bump .6s ease; display: inline-block; }
+@keyframes bump { 30% { transform: scale(1.6); color: var(--gold); } }
+
+/* Dados con relieve */
+.die {
+  background: linear-gradient(150deg, #ffffff 0%, var(--die) 45%, #e8e0cc 100%);
+  box-shadow: 0 4px 0 #cfc5ad, 0 10px 18px rgba(0,0,0,.35), inset 0 2px 0 #fff, inset 0 -4px 6px rgba(0,0,0,.06);
+}
+.die.blank { background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 2px rgba(255,255,255,.25); animation: idle 2.4s ease-in-out infinite; }
+.die.blank:nth-child(2) { animation-delay: .15s; } .die.blank:nth-child(3) { animation-delay: .3s; }
+.die.blank:nth-child(4) { animation-delay: .45s; } .die.blank:nth-child(5) { animation-delay: .6s; }
+@keyframes idle { 0%,100% { opacity: .6; transform: scale(.97); } 50% { opacity: 1; transform: scale(1); } }
+.pip { background: radial-gradient(circle at 35% 30%, #56645f 0%, var(--pip) 55%); box-shadow: inset 0 1px 2px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.7); }
+.die.rolling { animation: toss .78s cubic-bezier(.3,.7,.4,1) both; animation-delay: var(--d, 0s); }
+@keyframes toss {
+  0% { transform: translateY(0) rotate(0) scale(1); }
+  30% { transform: translateY(-55%) rotate(calc(var(--r) * .45)) scale(1.12); }
+  62% { transform: translateY(6%) rotate(calc(var(--r) * .9)) scale(.94); }
+  80% { transform: translateY(-10%) rotate(var(--r)) scale(1.03); }
+  100% { transform: translateY(0) rotate(var(--r)) scale(1); }
+}
+.die.landed { animation: land .45s ease-out; }
+@keyframes land { 0% { box-shadow: 0 0 0 0 var(--glow), 0 4px 0 #cfc5ad, 0 10px 18px rgba(0,0,0,.35); } 100% { box-shadow: 0 0 0 16px transparent, 0 4px 0 #cfc5ad, 0 10px 18px rgba(0,0,0,.35); } }
+.die.held { animation: heldglow 1.6s ease-in-out infinite; }
+@keyframes heldglow { 0%,100% { box-shadow: 0 0 0 4px var(--held), 0 10px 20px rgba(0,0,0,.35); } 50% { box-shadow: 0 0 0 4px var(--held), 0 0 24px 8px var(--glow), 0 10px 20px rgba(0,0,0,.35); } }
+.die.held::after { animation: pop .25s ease both; }
+@keyframes pop { from { opacity: 0; transform: translateX(-50%) scale(.6); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+
+/* Botones */
+.btn { position: relative; overflow: hidden; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 82%, #fff), var(--accent) 55%, color-mix(in srgb, var(--accent) 80%, #000)); transition: transform .12s, filter .2s; }
+.btn:hover:not(:disabled) { filter: brightness(1.08); }
+.btn::after { content: ""; position: absolute; top: 0; left: -60%; width: 40%; height: 100%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.45), transparent); transform: skewX(-20deg); transition: left .6s; pointer-events: none; }
+.btn:hover:not(:disabled)::after { left: 120%; }
+.btn.ghost { background: transparent; }
+#roll.ready { animation: breathe 1.8s ease-in-out infinite; }
+@keyframes breathe { 0%,100% { box-shadow: 0 3px 0 rgba(0,0,0,.25), 0 0 0 0 rgba(255,255,255,0); } 50% { box-shadow: 0 3px 0 rgba(0,0,0,.25), 0 0 0 9px rgba(255,255,255,.14); } }
+.rolls i { transition: background .3s, box-shadow .3s, transform .3s; }
+.rolls i.used { transform: scale(.75); }
+
+/* Opciones */
+.opt { transition: background .2s, transform .15s; }
+.opt:hover:not(:disabled) { transform: translateY(-2px); }
+.opt.reveal { animation: rise .4s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(.6s + var(--i) * 35ms); }
+.opt.best { background: linear-gradient(110deg, var(--held) 0%, #f9dd8c 45%, var(--held) 60%); background-size: 250% 100%; animation: shimmer 2.4s linear infinite; box-shadow: 0 0 18px var(--glow); }
+.opt.best.reveal { animation: rise .4s cubic-bezier(.2,.8,.2,1) both, shimmer 2.4s linear 1.1s infinite; animation-delay: calc(.6s + var(--i) * 35ms), 1.1s; }
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+
+/* Hoja */
+.sheet { box-shadow: 0 1px 0 var(--rule), 0 18px 40px rgba(0,0,0,.1); }
+#sheet.hide-prev td.preview { color: transparent; background: transparent; }
+td.preview { transition: color .3s, background .3s; }
+td.fresh { animation: fresh 1.3s ease; }
+@keyframes fresh { 0% { background: var(--held); color: #2a2208; } 100% { background: transparent; } }
+tr.total td.bump { animation: bump .6s ease; }
+
+/* Puntos flotantes, cartel y confeti */
+.floatpts { position: fixed; z-index: 50; pointer-events: none; font-family: var(--font-display); font-weight: 800; font-size: 30px; color: var(--gold); text-shadow: 0 2px 0 rgba(0,0,0,.45), 0 0 16px var(--glow); animation: floatup 1.1s cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes floatup { 0% { opacity: 0; transform: translate(-50%, -20%) scale(.6); } 20% { opacity: 1; transform: translate(-50%, -60%) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -260%) scale(1); } }
+.banner { position: absolute; left: 50%; top: 34%; z-index: 5; pointer-events: none; transform: translate(-50%, -50%); font-family: var(--font-display); font-weight: 800; font-size: clamp(26px, 6vw, 44px); letter-spacing: -0.02em; white-space: nowrap; color: #2a2208; background: linear-gradient(180deg, #ffe38a, var(--gold)); padding: 8px 22px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.4), 0 0 0 4px rgba(255,255,255,.35); opacity: 0; }
+.banner.show { animation: banner 1.7s cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes banner { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.3) rotate(-8deg); } 18% { opacity: 1; transform: translate(-50%, -50%) scale(1.12) rotate(2deg); } 30% { transform: translate(-50%, -50%) scale(1) rotate(0); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -80%) scale(.95); } }
+#confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; }
+.final li { animation: rise .5s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 120ms + .2s); }
+.final li:first-child { box-shadow: 0 0 24px var(--glow); }
+
+@media (max-width: 600px) {
+  .table { border-width: 7px; border-radius: 18px; }
+  .floatpts { font-size: 26px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
-    <h1>Cinco <span>Dados</span></h1>
+    <h1><span class="logo" aria-hidden="true"><span class="die mini" data-v="5"></span><span class="die mini" data-v="3"></span></span>Cinco <span>Dados</span></h1>
     <p class="sub">Tira hasta 3 veces por turno, guarda los dados que quieras y elige dónde anotar. El juego calcula los puntos de cada casilla por ti.</p>
   </header>
 
@@ -254,6 +362,7 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
 
   <div class="game" id="game" hidden>
     <section class="table" aria-label="Mesa">
+      <div class="banner" id="banner" aria-live="polite"></div>
       <div class="turn">
         <div class="who" id="who"></div>
         <div class="meta" id="round"></div>
@@ -287,6 +396,7 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
   </div>
 </div>
 
+<canvas id="confetti" aria-hidden="true"></canvas>
 <script>
 (function () {
   const CATS = [
@@ -334,6 +444,8 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
   }
 
   const $ = id => document.getElementById(id);
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let busy = false, lastTurnKey = "", prevTotals = [], fresh = null;
   let setupCount = 2;
   let setupNames = ["Jugador 1", "Jugador 2", "Jugador 3", "Jugador 4", "Jugador 5"];
   let state = null;
@@ -367,7 +479,7 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
     }
   }
   function startGame(names) {
-    state = newState(names);
+    state = newState(names); prevTotals = []; lastTurnKey = ""; busy = false;
     $("setup").hidden = true; $("game").hidden = false;
     document.body.classList.add("playing");
     render();
@@ -381,28 +493,117 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
   $("newgame").onclick = () => { state = null; document.body.classList.remove("playing"); $("game").hidden = true; $("setup").hidden = false; renderSetup(); };
 
   /* ---------- Juego ---------- */
+  function setFace(el, v) {
+    el.innerHTML = "";
+    for (let k = 0; k < 9; k++) {
+      const cell = document.createElement("span");
+      if (PIPS[v].includes(k)) cell.className = "pip";
+      el.appendChild(cell);
+    }
+  }
+
   function rollDice() {
-    if (!state || state.over || state.rollsLeft <= 0) return;
+    if (!state || state.over || state.rollsLeft <= 0 || busy) return;
     state.dice = state.dice.map((d, i) => state.held[i] && d ? d : 1 + Math.floor(Math.random() * 6));
     state.rollsLeft--;
-    try { navigator.vibrate && navigator.vibrate(30); } catch (e) {}
+    try { navigator.vibrate && navigator.vibrate([20, 40, 20]); } catch (e) {}
+    if (reduced) { render(true); announceCombo(); return; }
+    busy = true;
     render(true);
+    $("sheet").classList.add("hide-prev");
+    const rolling = [...document.querySelectorAll(".dice .die.rolling")];
+    const shuffle = setInterval(() => rolling.forEach(el => setFace(el, 1 + Math.floor(Math.random() * 6))), 75);
+    setTimeout(() => {
+      clearInterval(shuffle);
+      busy = false;
+      $("sheet").classList.remove("hide-prev");
+      rolling.forEach(el => {
+        const i = +el.id.split("-")[1];
+        setFace(el, state.dice[i]);
+        el.classList.remove("rolling"); el.style.removeProperty("--r");
+        void el.offsetWidth; el.classList.add("landed");
+        el.disabled = state.rollsLeft === 0;
+      });
+      document.querySelectorAll(".dice .die").forEach(el => { el.disabled = state.rollsLeft === 0; });
+      $("roll").disabled = state.over || state.rollsLeft === 0;
+      announceCombo();
+    }, 840);
+  }
+
+  function announceCombo() {
+    const has = id => score(CATS.find(c => c.id === id), state.dice) > 0;
+    const combo = has("ci") ? "¡Cinco iguales!" : has("sl") ? "¡Escalera larga!" : has("po") ? "¡Póker!" :
+      has("fu") ? "¡Full!" : has("sc") ? "¡Escalera corta!" : null;
+    if (!combo) return;
+    const b = $("banner"); b.textContent = combo;
+    b.classList.remove("show"); void b.offsetWidth; b.classList.add("show");
+    if (has("ci") || has("sl")) confetti(150); else if (has("po") || has("fu")) confetti(70);
+  }
+
+  /* Confeti en canvas */
+  function confetti(n) {
+    if (reduced) return;
+    const cv = $("confetti"), ctx = cv.getContext("2d");
+    const dpr = window.devicePixelRatio || 1, W = innerWidth, H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const colors = ["#f2c14e", "#c8452c", "#2e7d4f", "#fffdf7", "#4f8fd6", "#e8833a"];
+    const parts = Array.from({ length: n }, () => ({
+      x: W / 2 + (Math.random() - .5) * W * .3, y: H * .35,
+      vx: (Math.random() - .5) * 15, vy: -Math.random() * 14 - 4,
+      s: 6 + Math.random() * 6, r: Math.random() * 6, vr: (Math.random() - .5) * .4,
+      c: colors[(Math.random() * colors.length) | 0]
+    }));
+    let frame = 0;
+    (function tick() {
+      ctx.clearRect(0, 0, W, H);
+      parts.forEach(p => {
+        p.vy += .35; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+        ctx.globalAlpha = Math.max(0, 1 - frame / 150);
+        ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore();
+      });
+      if (++frame < 150) requestAnimationFrame(tick); else ctx.clearRect(0, 0, W, H);
+    })();
+  }
+
+  function floatPoints(src, v) {
+    if (!src || reduced) return;
+    const r = src.getBoundingClientRect();
+    const f = document.createElement("span");
+    f.className = "floatpts"; f.textContent = "+" + v;
+    f.style.left = (r.left + r.width / 2) + "px"; f.style.top = (r.top + r.height / 2) + "px";
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 1200);
+  }
+
+  function countUp(el, from, to) {
+    if (reduced || from === to) { el.textContent = to; return; }
+    const t0 = performance.now(), dur = 650;
+    (function step(t) {
+      const k = Math.min(1, Math.max(0, (t - t0) / dur)), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = Math.round(from + (to - from) * e);
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
   }
   function toggleHold(i) {
+    if (busy) return;
     if (!state || state.rollsLeft === MAX_ROLLS || state.rollsLeft === 0 || state.over) return;
     state.held[i] = !state.held[i];
     render();
   }
-  function choose(catId) {
+  function choose(catId, src) {
     const p = state.players[state.current];
-    if (state.rollsLeft === MAX_ROLLS || p.scores[catId] !== undefined) return;
+    if (busy || state.rollsLeft === MAX_ROLLS || p.scores[catId] !== undefined) return;
     const cat = CATS.find(c => c.id === catId);
     p.scores[catId] = score(cat, state.dice);
+    floatPoints(src, p.scores[catId]);
+    fresh = { player: state.current, cat: catId };
+    try { navigator.vibrate && navigator.vibrate(15); } catch (e) {}
     // siguiente turno
     state.dice = [0, 0, 0, 0, 0]; state.held = [false, false, false, false, false]; state.rollsLeft = MAX_ROLLS;
     state.current++;
     if (state.current >= state.players.length) { state.current = 0; state.round++; }
-    if (state.round > CATS.length) state.over = true;
+    if (state.round > CATS.length) { state.over = true; setTimeout(() => confetti(240), 300); }
     render();
   }
   const total = p => Object.values(p.scores).reduce((a, b) => a + b, 0);
@@ -423,9 +624,13 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
   function dieEl(value, i, held, rolling) {
     const b = document.createElement("button");
     b.type = "button"; b.id = "die-" + i;
-    b.className = "die" + (value ? "" : " blank") + (held ? " held" : "") + (rolling && !held ? " rolling" : "");
+    b.className = "die" + (value ? "" : " blank") + (held ? " held" : "") + (rolling && !held && !reduced ? " rolling" : "");
+    if (rolling && !held && !reduced) {
+      b.style.setProperty("--r", ((Math.random() < .5 ? -1 : 1) * (Math.random() < .5 ? 360 : 720)) + "deg");
+      b.style.setProperty("--d", (i * 0.04) + "s");
+    }
     const canHold = state.rollsLeft < MAX_ROLLS && state.rollsLeft > 0 && !state.over;
-    b.disabled = !canHold;
+    b.disabled = !canHold || busy;
     b.setAttribute("aria-pressed", String(held));
     b.setAttribute("aria-label", value ? `Dado ${i + 1}: ${value}${held ? ", guardado" : ""}` : `Dado ${i + 1}: sin tirar`);
     if (value) for (let k = 0; k < 9; k++) {
@@ -443,6 +648,8 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
     const rolled = state.rollsLeft < MAX_ROLLS;
 
     $("who").textContent = state.over ? "Fin de la partida" : "Turno de " + p.name;
+    const turnKey = state.over ? "over" : state.round + "-" + state.current;
+    if (turnKey !== lastTurnKey) { const w = $("who"); w.classList.remove("enter"); void w.offsetWidth; w.classList.add("enter"); lastTurnKey = turnKey; }
     $("round").textContent = state.over ? CATS.length + " rondas jugadas" : `Ronda ${state.round} de ${CATS.length}`;
 
     const board = $("board"); board.innerHTML = "";
@@ -450,14 +657,19 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
       const c = document.createElement("span");
       c.className = "chip" + (i === state.current && !state.over ? " on" : "");
       const n = document.createElement("span"); n.textContent = pl.name;
-      const t = document.createElement("b"); t.textContent = total(pl);
+      const t = document.createElement("b");
+      const now = total(pl), before = prevTotals[i] ?? now;
       c.append(n, t); board.appendChild(c);
+      if (now !== before) { c.classList.add("bump"); countUp(t, before, now); } else t.textContent = now;
     });
+    const totalsBefore = prevTotals.slice();
+    prevTotals = state.players.map(total);
 
     const dice = $("dice"); dice.innerHTML = "";
     state.dice.forEach((d, i) => dice.appendChild(dieEl(d, i, state.held[i], rolling)));
 
-    $("roll").disabled = state.over || state.rollsLeft === 0;
+    $("roll").disabled = state.over || state.rollsLeft === 0 || busy;
+    $("roll").classList.toggle("ready", !state.over && state.rollsLeft === MAX_ROLLS);
     $("roll").textContent = state.rollsLeft === MAX_ROLLS ? "Tirar" : (state.rollsLeft ? "Volver a tirar" : "Sin tiradas");
     const rolls = $("rolls"); rolls.innerHTML = "";
     if (!state.over) {
@@ -478,14 +690,15 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
       const v = rolled ? score(c, state.dice) : null;
       const b = document.createElement("button");
       b.type = "button"; b.id = "opt-" + c.id;
-      b.className = "opt" + (v === 0 ? " zero" : "") + (!used && c.id === best.id ? " best" : "");
+      b.className = "opt" + (v === 0 ? " zero" : "") + (!used && c.id === best.id ? " best" : "") + (rolling && !reduced ? " reveal" : "");
+      b.style.setProperty("--i", CATS.indexOf(c));
       b.disabled = used || !rolled;
       const name = document.createElement("span"); name.textContent = c.name;
       const pts = document.createElement("span"); pts.className = "pts";
       pts.textContent = used ? "✓ " + p.scores[c.id] : (v === null ? "–" : v);
       b.append(name, pts);
       b.title = used ? "Ya usada" : "Anotar " + (v ?? 0) + " en " + c.name;
-      b.onclick = () => choose(c.id);
+      b.onclick = () => choose(c.id, b);
       list.appendChild(b);
     });
 
@@ -494,18 +707,19 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
     if (state.over) {
       const ol = $("ranking"); ol.innerHTML = "";
       [...state.players].sort((a, b) => total(b) - total(a)).forEach((pl, i) => {
-        const li = document.createElement("li");
+        const li = document.createElement("li"); li.style.setProperty("--i", i);
         const n = document.createElement("span"); n.textContent = (i === 0 ? "🏆 " : (i + 1) + ". ") + pl.name;
         const s = document.createElement("span"); s.className = "pts"; s.textContent = total(pl) + " pts";
         li.append(n, s); ol.appendChild(li);
       });
     }
 
-    renderSheet(rolled);
+    renderSheet(rolled, totalsBefore);
+    fresh = null;
     try { window.claude?.hot?.snapshot?.(() => ({ state })); } catch (e) {}
   }
 
-  function renderSheet(rolled) {
+  function renderSheet(rolled, totalsBefore) {
     const t = $("sheet"); t.innerHTML = "";
     const thead = t.createTHead(); const hr = thead.insertRow();
     const h0 = document.createElement("th"); h0.textContent = "Casilla"; hr.appendChild(h0);
@@ -522,24 +736,31 @@ button, td.preview { touch-action: manipulation; -webkit-tap-highlight-color: tr
       const rule = document.createElement("span"); rule.className = "rule"; rule.textContent = c.rule; c0.appendChild(rule);
       state.players.forEach((pl, i) => {
         const td = r.insertCell();
-        if (pl.scores[c.id] !== undefined) td.textContent = pl.scores[c.id];
+        if (pl.scores[c.id] !== undefined) {
+          td.textContent = pl.scores[c.id];
+          if (fresh && fresh.player === i && fresh.cat === c.id && !reduced) td.className = "fresh";
+        }
         else if (i === state.current && rolled && !state.over) {
           const v = score(c, state.dice);
           td.textContent = v; td.className = "preview" + (v === 0 ? " zero" : "");
           td.title = "Anotar aquí"; td.tabIndex = 0;
-          td.onclick = () => choose(c.id);
-          td.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(c.id); } };
+          td.onclick = () => choose(c.id, td);
+          td.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(c.id, td); } };
         } else { td.textContent = "·"; td.className = "empty"; }
       });
     });
     const tr = tb.insertRow(); tr.className = "total";
     tr.insertCell().textContent = "Total";
-    state.players.forEach(pl => { tr.insertCell().textContent = total(pl); });
+    state.players.forEach((pl, i) => {
+      const td = tr.insertCell(), now = total(pl), before = totalsBefore[i] ?? now;
+      if (now !== before) { td.className = "bump"; countUp(td, before, now); } else td.textContent = now;
+    });
   }
 
   $("roll").onclick = rollDice;
 
   function boot(data) {
+    document.querySelectorAll(".die.mini").forEach(el => setFace(el, +el.dataset.v));
     renderSetup();
     if (data && data.state) { state = data.state; document.body.classList.add("playing"); $("setup").hidden = true; $("game").hidden = false; render(); }
   }
